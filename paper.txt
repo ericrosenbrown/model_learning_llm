@@ -1,0 +1,29 @@
+Title: Effectively Learning Option Preconditions with Large Language Models
+Abstract
+Problem: We address the problem of learning preconditions of options.
+Related work: Prior approaches generate a supervised dataset in an online manner by collecting positive and negative state examples via policy rollouts.
+Challenge: Randomly sampling states is expensive and expotentially challenging, and even with active learning strategies, starting with no prior information about the distriubtion can require many samples, and hand-crating priors is not scalable.
+Our solution: Leverage Large Language Models (LLMs) to produce an initial distrubution over states (which may be wrong) to make online learning more effecient.
+
+To our knowledge, this is the first work to leverage LLMs to make learning option preconditions more effecient.
+
+Related work:
+- Learning initation sets of options
+- Extracting precondition information from LLMs
+
+Background:
+- An environment is a tuple (A,B,C,D) (Basing this off tom silver corl paper)
+- an object type a in A has a name (button) and a tuple of real-valued features of dimnesion dim(a) (x,y,z,radius, color)
+- an object o in O has a name (button1) and a type, denoted type(o) in A.
+- a state x in X is an assignment of objects to feature vectors (copy size from tom)
+- the action space B is action space.
+- The transition function C is standard x,a->x' (stochastic potentially)
+- a predicate p in D has a name (Touching) and a tuple of types (e.g: stick, button)
+- A ground atom is a predicate and a mapping from its type to object (Touching(stick1,button3))
+- A lifted atom instead has a mapping to a tped variables which are placegolders for objects (Touching (?s, ?b))
+- Predicates induce a state abstraction: abstract(x) denotes the set of ground atoms that hold true in state x, with all others assumed false.
+- we use s in S to denoate an abstract state (abstract: X -> S)
+- Define option = (I, pi, tau)
+- these are defined over X (low-level state).
+- arguments are varaibles with types in A.
+- We define a precondition as a set of lifted atoms over predicates D and ????
