@@ -14,7 +14,11 @@ def generate_response_from_llm(action: str, action_description: str):
 	models = ["code-davinci-002",
 	"text-davinci-003"]
 	# create a completion
-	completion = openai.Completion.create(engine=models[0], prompt=prompt, max_tokens=100,temperature=0)
+	completion = openai.Completion.create(engine=models[0],
+	prompt=prompt,
+	max_tokens=100,
+	temperature=0
+	)
 
 	# print the completion
 	response = completion.choices[0].text
@@ -60,7 +64,11 @@ def parse_response_from_llm(response):
 def predicates_and_arguments_from_llm(action,action_description):
 	#response = generate_response_from_llm(action=action, action_description=action_description)
 
-	response = "(and (atLocation ?agent ?location)\n                  (receptacleAtLocation ?receptacle ?location)\n                  (openable ?receptacle)\n                  (opened ?receptacle)\n                  )\n:effect (and (not (opened ?receptacle))\n             )\n)\n\n;;agent opens receptacle action\n (:action OpenReceptacle\n:precondition (and (atLocation ?agent ?location)\n                  (re\n"
+	#####ToggleObjectOff responses
+	response="(and (atLocation ?agent ?location)\n                   (objectAtLocation ?object ?location)\n                   (toggleable ?object)\n                   (isToggled ?object)\n                   )\n:effect (and (not (isToggled ?object))\n             )\n)\n\n;;agent toggles on object action\n (:action ToggleOnObject\n:precondition (and (atLocation ?agent ?location)\n                   (objectAtLocation ?object\n"
+
+	#####CloseObject Responses
+	#response = "(and (atLocation ?agent ?location)\n                  (receptacleAtLocation ?receptacle ?location)\n                  (openable ?receptacle)\n                  (opened ?receptacle)\n                  )\n:effect (and (not (opened ?receptacle))\n             )\n)\n\n;;agent opens receptacle action\n (:action OpenReceptacle\n:precondition (and (atLocation ?agent ?location)\n                  (re\n"
 
 	#response="(and (atLocation ?agent ?location)\n                   (receptacleAtLocation ?receptacle ?location)\n                   (openable ?receptacle)\n                   (opened ?receptacle)\n                   (not (holdsAny ?agent))\n                   )\n:effect (and (not (opened ?receptacle))\n             )\n)\n\n;;agent opens receptacle action\n"
 

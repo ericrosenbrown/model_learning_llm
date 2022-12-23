@@ -21,7 +21,19 @@ def intersection_over_union(action, predicted_preconditions):
 
 	#TODO: make it so that action is a class (or something) so that predicates of preconditions can be directly grabbed from it rather than hardcoded here
 	if action == "CloseObject":
-		real_precondition= [(openable, ('receptacle_0',)), (opened, ('receptacle_0',)), (atLocation, ('agent_0', 'location_0')), (receptacleAtLocation, ('receptacle_0', 'location_0'))]
+		real_precondition= [(openable, ('receptacle_0',)),
+		(opened, ('receptacle_0',)),
+		(atLocation, ('agent_0', 'location_0')),
+		(receptacleAtLocation, ('receptacle_0', 'location_0'))
+		]
+	elif action == "ToggleOffObject":
+		real_precondition= [(atLocation, ("agent_0", "location_0")), 
+		(objectAtLocation, ("object_0","location_0")),
+		(toggleable,("object_0",)),
+		(isToggled,("object_0",))
+		]
+	else:
+		raise Exception("Invalid action given")
 
 	#Calculate intersection
 	for prec in real_precondition:
@@ -44,7 +56,7 @@ def generate_random_state():
 
 	#1) Generate the receptacle
 	r = Receptacle(location = random.choice(list(Location)),
-		opened = bool(random.choice([0,1])))
+		opened = random.choice([True,False,None]))
 
 	#2) Generate the object
 	o = Object(location = random.choice(list(Location)),
@@ -326,7 +338,7 @@ def generate_informed_state_predicates_only(predicates, epsilon=1.0):
 	return([r,o,a])
 
 
-def learn_preconditions(generate_state,predicates=None,arguments=None,epsilon=1,num_samples = 10):
+def learn_preconditions(action,generate_state,predicates=None,arguments=None,epsilon=1,num_samples = 10):
 	'''
 	General function for learning preconditions.
 
@@ -357,7 +369,13 @@ def learn_preconditions(generate_state,predicates=None,arguments=None,epsilon=1,
 		#Check if action feasible
 		#TODO: This assumes low-level state has specific ordering (r,o,a), make low-level state be a dict potentially and index accordingly?
 		#TODO: This already assumes we have the class-level arguments to the action, might want to relax that, or somehow do choosing when multiple objects are involved??
-		can_close = CloseObject(low_level_state[2], low_level_state[2].location, low_level_state[0])
+		#TODO: change name from can close to success or something
+		if action.__name__ == "CloseObject":
+			can_close = CloseObject(low_level_state[2], low_level_state[2].location, low_level_state[0])
+		elif action.__name__ == "ToggleOffObject":
+			can_close = ToggleOffObject(low_level_state[2],low_level_state[2].location,low_level_state[1])
+		else:
+			raise Exception("Action not valid")
 
 		#Get lifted version of high-level state
 		lifted_high_level_state = lift_grounded_predicates(high_level_state)
@@ -401,7 +419,7 @@ if __name__ == "__main__":
 
 	#Hyperparameters
 	#Different number of samples to try
-	num_samples_list = list(np.arange(0,150,10))
+	num_samples_list = list(np.arange(0,200,10))
 	#Number of seeds
 	num_seeds = 10
 	#Episilon used for sampling (we sample according to informed data epislon probability)
@@ -409,11 +427,17 @@ if __name__ == "__main__":
 	#TODO: put action and action description in a list to choose from
 	#action to do and description 
 	#TODO: This is not actually properly integrated in
-	action = "CloseObject"
-	action_description = "agent closes receptacle action"
+	action_list = [[CloseObject, "agent closes receptacle action", [opened,atLocation,receptacleAtLocation, objectAtLocation], [['receptacle_0'],['agent_0','loc1'],['receptacle_0','loc1'],['object_0','location2']]],
+	[ToggleOffObject, "agent toggles off object action", [atLocation, objectAtLocation, toggleable, isToggled],[["a0","l0"],["o0","l0"],["o0"],["o0"]]]
+	]
+	action_idx = 1
+	action = action_list[action_idx][0]
+	action_description = action_list[action_idx][1]
 
-	premade_predicates = [opened,atLocation,receptacleAtLocation, objectAtLocation]
-	premade_arguments = [['receptacle_0'],['agent_0','loc1'],['receptacle_0','loc1'],['object_0','location2']]
+	action_name = action.__name__
+
+	premade_predicates = action_list[action_idx][2]
+	premade_arguments = action_list[action_idx][3]
 
 
 	random_scores_seeds = []
@@ -422,39 +446,39 @@ if __name__ == "__main__":
 	llm_scores_seeds = []
 
 	#TODO: Currently, for all seeds and all runs, ping LLM once. could be moved inside but more expensive for expermentation.
-	llm_predicates, llm_arguments = predicates_and_arguments_from_llm(action=action,action_description=action_description)
+	llm_predicates, llm_arguments = predicates_and_arguments_from_llm(action=action_name,action_description=action_description)
 
 	for seed in tqdm(range(num_seeds)):
 		random_scores = []
 		for num_samples in num_samples_list:
-			preconditions = learn_preconditions(generate_random_state,num_samples=num_samples)
+			preconditions = learn_preconditions(action,generate_random_state,num_samples=num_samples)
 
 			#TODO: This method of scoring may not be best?
-			score = intersection_over_union("CloseObject", preconditions)
+			score = intersection_over_union(action_name, preconditions)
 			random_scores.append(score)
 
 		informed_scores = []
 		for num_samples in num_samples_list:
-			preconditions = learn_preconditions(generate_informed_state_predicates_only,predicates=premade_predicates,epsilon=epsilon,num_samples=num_samples)
+			preconditions = learn_preconditions(action,generate_informed_state_predicates_only,predicates=premade_predicates,epsilon=epsilon,num_samples=num_samples)
 
 			#TODO: This method of scoring may not be best?
-			score = intersection_over_union("CloseObject", preconditions)
+			score = intersection_over_union(action_name, preconditions)
 			informed_scores.append(score)
 
 		informed_args_scores = []
 		for num_samples in num_samples_list:
-			preconditions = learn_preconditions(generate_informed_state_predicates_and_arguments,predicates=premade_predicates,arguments=premade_arguments,epsilon=epsilon,num_samples=num_samples)
+			preconditions = learn_preconditions(action,generate_informed_state_predicates_and_arguments,predicates=premade_predicates,arguments=premade_arguments,epsilon=epsilon,num_samples=num_samples)
 
 			#TODO: This method of scoring may not be best?
-			score = intersection_over_union("CloseObject", preconditions)
+			score = intersection_over_union(action_name, preconditions)
 			informed_args_scores.append(score)
 
 		llm_scores = []
 		for num_samples in num_samples_list:
-			preconditions = learn_preconditions(generate_informed_state_predicates_and_arguments,predicates=llm_predicates,arguments=llm_arguments,epsilon=epsilon,num_samples=num_samples)
+			preconditions = learn_preconditions(action,generate_informed_state_predicates_and_arguments,predicates=llm_predicates,arguments=llm_arguments,epsilon=epsilon,num_samples=num_samples)
 
 			#TODO: This method of scoring may not be best?
-			score = intersection_over_union("CloseObject", preconditions)
+			score = intersection_over_union(action_name, preconditions)
 			llm_scores.append(score)
 
 		random_scores_seeds.append(random_scores)
@@ -496,6 +520,6 @@ if __name__ == "__main__":
 	plt.legend(loc="lower right")
 	plt.xlabel("Number of policy rollouts")
 	plt.ylabel("Intersection over Union")
-	plt.title("Number of samples vs initation set classification success\n{action}".format(action=action))
+	plt.title("Number of samples vs initation set classification success\n{action}".format(action=action_name))
 	plt.show()
 

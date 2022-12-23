@@ -9,7 +9,7 @@ def CloseObject(a: Agent, al: Location, r: Receptacle):
 
 def ToggleOffObject(a: Agent, al: Location, o: Object):
 	return (atLocation(a, al)
-		and objectAtLocation(r,al)
+		and objectAtLocation(o,al)
 		and toggleable(o)
 		and isToggled(o))
 

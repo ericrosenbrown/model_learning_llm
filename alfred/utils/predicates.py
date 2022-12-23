@@ -57,7 +57,11 @@ holdsAny,
 isClean,
 cleanable,
 isHot,
-heatable
+heatable,
+isToggled,
+toggleable,
+isSliced,
+sliceable
 ]
 
 def lift_grounded_predicates(high_level_state):
