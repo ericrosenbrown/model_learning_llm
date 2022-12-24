@@ -12,5 +12,3 @@ def ToggleOffObject(a: Agent, al: Location, o: Object):
 		and objectAtLocation(o,al)
 		and toggleable(o)
 		and isToggled(o))
-
-

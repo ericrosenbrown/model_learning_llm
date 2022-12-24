@@ -35,6 +35,7 @@ def intersection_over_union(action, predicted_preconditions):
 	else:
 		raise Exception("Invalid action given")
 
+
 	#Calculate intersection
 	for prec in real_precondition:
 		if prec in predicted_preconditions:
@@ -419,7 +420,7 @@ if __name__ == "__main__":
 
 	#Hyperparameters
 	#Different number of samples to try
-	num_samples_list = list(np.arange(0,200,10))
+	num_samples_list = list(np.arange(0,200,20))
 	#Number of seeds
 	num_seeds = 10
 	#Episilon used for sampling (we sample according to informed data epislon probability)
@@ -428,7 +429,7 @@ if __name__ == "__main__":
 	#action to do and description 
 	#TODO: This is not actually properly integrated in
 	action_list = [[CloseObject, "agent closes receptacle action", [opened,atLocation,receptacleAtLocation, objectAtLocation], [['receptacle_0'],['agent_0','loc1'],['receptacle_0','loc1'],['object_0','location2']]],
-	[ToggleOffObject, "agent toggles off object action", [atLocation, objectAtLocation, toggleable, isToggled],[["a0","l0"],["o0","l0"],["o0"],["o0"]]]
+	[ToggleOffObject, "agent toggles off object action", [atLocation, objectAtLocation, toggleable, isToggled],[["a0","l0"],["o0","l0"],["o0"],["o0"]]],
 	]
 	action_idx = 1
 	action = action_list[action_idx][0]
