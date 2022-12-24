@@ -205,6 +205,13 @@ def generate_grounded_predicates(entities: list) -> list:
 				lifted_predicates.append(holds)
 				arguments.append([a, o])
 
+	"""
+	MFNOTE: Since we always add a lifted predictate and argument at once,
+	I think it's cleaner to nundle the predicate, argument pair
+	at the beginning, rather than zipping them here.
+	Eg pred_arg_pairs.append((holds, [a, o]))
+	I'd also make pred-arg pair a dataclass.
+	"""
 	high_level_state = list(zip(lifted_predicates, arguments))
 	return(high_level_state)
 

@@ -1,5 +1,7 @@
 from enum import Enum
 
+from dataclasses import dataclass
+from typing import Optional
 
 class Location(Enum):
 	KITCHEN = 1
@@ -7,15 +9,13 @@ class Location(Enum):
 	OFFICE = 3
 	LIVING_ROOM = 4
 
-#TODO: Type hints are a lie for bool, they can be none. Maybe do some better way to deal with open/openable etc.
+@dataclass(eq=True)
 class Object:
-	def __init__(self, location: Location, clean: bool, hot: bool, toggled: bool, sliced: bool):
-		self.location = location
-		self.clean = clean
-		self.hot = hot
-		self.toggled = toggled
-		self.sliced = sliced
-		#TODO: Write equals function over attributes, and for other classes (maybe?)
+	location: Location
+	clean: Optional[bool]
+	hot: Optional[bool]
+	toggled: Optional[bool]
+	sliced: Optional[bool]
 	def __str__(self):
 		ret_string = "Object | "
 		ret_string += "Location: {l} | ".format(l=str(self.location))
@@ -45,6 +45,7 @@ class Receptacle:
 		ret_string += "Location {l} | ".format(l=str(self.location))
 		ret_string += "Opened {o} | ".format(o=str(self.opened))
 		return(ret_string)
+
 
 
 if __name__ == "__main__":

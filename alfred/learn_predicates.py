@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 from tqdm import tqdm
+from typing import Callable, Optional
+
 
 def intersection_over_union(action, predicted_preconditions):
 	'''
@@ -52,7 +54,18 @@ def generate_random_state():
 
 	@return: a list of entities in low-level state
 	'''
+	
+	"""
+	MFNOTE: I'd
 
+	1. Make a StateVar class and make existing statevars subclass it
+	2. Make a State class that holds a tuple (or frozenset) of StateVars
+	3. Make existing StateVar classes dataclasses
+	4. Typehint this function as returning a state. 
+
+	This may be overkill though.
+	
+	"""
 	#TODO: Make this more expressive and interesting. For, now generate a single object, receptacle and agent.
 
 	#1) Generate the receptacle
@@ -339,7 +352,7 @@ def generate_informed_state_predicates_only(predicates, epsilon=1.0):
 	return([r,o,a])
 
 
-def learn_preconditions(action,generate_state,predicates=None,arguments=None,epsilon=1,num_samples = 10):
+def learn_preconditions(action,generate_state: Callable,predicates=None,arguments=None,epsilon=1,num_samples = 10):
 	'''
 	General function for learning preconditions.
 
@@ -356,6 +369,13 @@ def learn_preconditions(action,generate_state,predicates=None,arguments=None,eps
 	lifted_dataset = []
 	for _ in range(num_samples):
 		#Auto-generate random state
+		"""
+		MFNOTE: If the args to generate_states are not used later in this function,
+		I think a cleaner pattern is to pass them into generate_state via partial
+		before passing generate_state into this function.
+		eg learn_preconditions(generate_state=partial(generate_state_func, predicates=predicates, arguments=arguments, epsilon=epsilon))
+		This way we can assume generate_state takes in 0 arguments
+		"""
 		if predicates == None:
 			low_level_state = generate_state()
 		elif arguments == None:
@@ -369,6 +389,7 @@ def learn_preconditions(action,generate_state,predicates=None,arguments=None,eps
 
 		#Check if action feasible
 		#TODO: This assumes low-level state has specific ordering (r,o,a), make low-level state be a dict potentially and index accordingly?
+			# MFNOTE: I'd make it a dataclass. I left a note about this in generate_random_state().
 		#TODO: This already assumes we have the class-level arguments to the action, might want to relax that, or somehow do choosing when multiple objects are involved??
 		#TODO: change name from can close to success or something
 		if action.__name__ == "CloseObject":
@@ -408,6 +429,8 @@ def learn_preconditions(action,generate_state,predicates=None,arguments=None,eps
 			for hls_1 in succesful_lifted_dataset:
 				if lifted_pred_arg not in hls_1:
 					in_all = False
+					#We can break out of the inner loop early since we already found an exception
+					break
 			if in_all and lifted_pred_arg not in preconditions:
 				preconditions.append(lifted_pred_arg)
 
